@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetic Retinopathy Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Existing styles */
+        .prediction-form {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .form-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .form-section {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .result-section {
+            margin-top: 10px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        @media (min-width: 768px) {
+            .form-section {
+                width: 48%;
+            }
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn.primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn.secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn img {
+            margin-right: 10px;
+        }
+
+        /* New styles for modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .patient-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .patient-form input,
+        .patient-form select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: 'Poppins', sans-serif;
+        }
+        .patient-form label {
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='Images/eye-svgrepo-com.svg') }}" alt="Eye Logo">
+            <h1>Diabetic Retinopathy Detection System</h1>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h2>Classify Image with automatic diabetic retinopathy detection system in seconds</h2>
+                <p>The Automatic Diabetic Retinopathy Detection System is a revolutionary tool designed to classify retinal images and detect the presence of diabetic retinopathy within seconds.</p>
+                
+                <div class="buttons">
+                    <button id="uploadBtn" class="btn primary">
+                        <img src="{{ url_for('static', filename='Images/arrow-up-svgrepo-com.svg') }}" alt="Upload Icon">
+                        Upload an Image
+                    </button>
+                    <!-- <button id="demoBtn" class="btn secondary">
+                        <img src="{{ url_for('static', filename='Images/play-circle-svgrepo-com.svg') }}" alt="Play Icon">
+                        Watch the demo
+                    </button> -->
+                </div>
+                
+            </div>
+            <div class="hero-image">
+                <img src="{{ url_for('static', filename='Images/unsplash_7H41oiADqqg.png') }}" alt="Close-up of an eye">
+            </div>
+        </section>
+
+        <!-- Patient Details Modal -->
+        <div id="patientModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Patient Details</h2>
+                <form id="patientForm" class="patient-form">
+                    <div>
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div>
+                        <label for="age">Age</label>
+                        <input type="number" id="age" required>
+                    </div>
+                    <div>
+                        <label for="dateOfBirth">Date of Birth</label>
+                        <input type="date" id="dateOfBirth" required>
+                    </div>
+                    <div>
+                        <label for="gender">Gender</label>
+                        <select id="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="inclineLevel">Incline Level</label>
+                        <input type="number" id="inclineLevel" required>
+                    </div>
+                    <div>
+                        <label for="familyHistory">Family Diabetic History</label>
+                        <select id="familyHistory" required>
+                            <option value="">Select Option</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn primary">Continue to Upload</button>
+                </form>
+            </div>
+        </div>
+
+        <section class="examples" id="exampleImagesSection">
+            <h3>Or select from below given examples</h3>
+            <div class="example-images">
+                <div class="example-item">
+                    <img src="{{ url_for('static', filename='Images/Mild DR_1007 2.png') }}" alt="Mild DR" class="example-img">
+                </div>
+                <div class="example-item">
+                    <img src="{{ url_for('static', filename='Images/Mild DR_1008 2.png') }}" alt="Moderate DR" class="example-img">
+                </div>
+                <div class="example-item">
+                    <img src="{{ url_for('static', filename='Images/No DR_1008 2.png') }}" alt="No DR" class="example-img">
+                </div>
+                <div class="example-item">
+                    <img src="{{ url_for('static', filename='Images/Proliferative DR_106 1.png') }}" alt="Proliferative DR" class="example-img">
+                </div>
+                <div class="example-item">
+                    <img src="{{ url_for('static', filename='Images/Severe DR_111 2.png') }}" alt="Severe DR" class="example-img">
+                </div>
+            </div>
+        </section>
+
+        <section class="form-container" id="uploadFormSection">
+            <div class="form-section">
+                <div class="prediction-form">
+                    <h2>Binary Classification</h2>
+                    <form action="/predict_binary" method="post" enctype="multipart/form-data" id="binaryForm">
+                        <input type="hidden" name="patientName" id="hiddenName">
+                        <input type="hidden" name="patientAge" id="hiddenAge">
+                        <input type="hidden" name="patientDOB" id="hiddenDOB">
+                        <input type="hidden" name="patientGender" id="hiddenGender">
+                        <input type="hidden" name="patientIncline" id="hiddenIncline">
+                        <input type="hidden" name="patientHistory" id="hiddenHistory">
+                        
+                        <input type="file" name="file" id="fileInput">
+                        <button type="submit" class="btn primary">Binary Classification</button>
+                    </form>
+                    <div class="result-section">
+                        {% if binary_prediction %}
+                        <h3>Binary Prediction: {{ binary_prediction }}</h3>
+                        {% endif %}
+                        {% if binary_image_path %}
+                        <h3>Uploaded Image</h3>
+                        <img src="{{ binary_image_path }}" alt="Binary Classification Image">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if show_multi_class %}
+            <div class="form-section">
+                <div class="prediction-form">
+                    <h2>Multi-class Classification</h2>
+                    <form action="/predict_multi" method="post" enctype="multipart/form-data" id="multiForm">
+                        <input type="hidden" name="patientName" id="hiddenNameMulti">
+                        <input type="hidden" name="patientAge" id="hiddenAgeMulti">
+                        <input type="hidden" name="patientDOB" id="hiddenDOBMulti">
+                        <input type="hidden" name="patientGender" id="hiddenGenderMulti">
+                        <input type="hidden" name="patientIncline" id="hiddenInclineMulti">
+                        <input type="hidden" name="patientHistory" id="hiddenHistoryMulti">
+                        
+                        <input type="file" name="file" value="{{ binary_image_path }}">
+                        <button type="submit" class="btn primary">Multi-class Classification</button>
+                    </form>
+                    <div class="result-section">
+                        {% if multi_prediction %}
+                        <h3>Multi-class Prediction: {{ multi_prediction }}</h3>
+                        {% endif %}
+                        {% if multi_image_path %}
+                        <h3>Uploaded Image</h3>
+                        <img src="{{ multi_image_path }}" alt="Multi-class Classification Image">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+        {% if binary_prediction %}
+        <section class="form-container">
+            <div class="form-section">
+                <div class="prediction-form">
+                    <h2>Generate Report</h2>
+                    <form action="/generate_report" method="post">
+                        <input type="hidden" name="binary_prediction" value="{{ binary_prediction }}">
+                        <input type="hidden" name="multi_prediction" value="{{ multi_prediction }}">
+                        <input type="hidden" name="image_path" value="{{ binary_image_path }}">
+                        
+                        <input type="hidden" name="patientName" id="hiddenNameReport">
+                        <input type="hidden" name="patientAge" id="hiddenAgeReport">
+                        <input type="hidden" name="patientDOB" id="hiddenDOBReport">
+                        <input type="hidden" name="patientGender" id="hiddenGenderReport">
+                        <input type="hidden" name="patientIncline" id="hiddenInclineReport">
+                        <input type="hidden" name="patientHistory" id="hiddenHistoryReport">
+                        
+                        <button type="submit" class="btn primary">Download Report</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('patientModal');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const closeBtn = document.querySelector('.close');
+            const patientForm = document.getElementById('patientForm');
+            const binaryForm = document.getElementById('binaryForm');
+            const multiForm = document.getElementById('multiForm');
+            const demoBtn = document.getElementById('demoBtn');
+
+            uploadBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                modal.style.display = "block";
+            });
+
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = "none";
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            });
+
+            patientForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // Transfer patient details to hidden fields in binary form
+                document.getElementById('hiddenName').value = document.getElementById('fullName').value;
+                document.getElementById('hiddenAge').value = document.getElementById('age').value;
+                document.getElementById('hiddenDOB').value = document.getElementById('dateOfBirth').value;
+                document.getElementById('hiddenGender').value = document.getElementById('gender').value;
+                document.getElementById('hiddenIncline').value = document.getElementById('inclineLevel').value;
+                document.getElementById('hiddenHistory').value = document.getElementById('familyHistory').value;
+
+                // Transfer to multi-class form if it exists
+                if (document.getElementById('hiddenNameMulti')) {
+                    document.getElementById('hiddenNameMulti').value = document.getElementById('fullName').value;
+                    document.getElementById('hiddenAgeMulti').value = document.getElementById('age').value;
+                    document.getElementById('hiddenDOBMulti').value = document.getElementById('dateOfBirth').value;
+                    document.getElementById('hiddenGenderMulti').value = document.getElementById('gender').value;
+                    document.getElementById('hiddenInclineMulti').value = document.getElementById('inclineLevel').value;
+                    document.getElementById('hiddenHistoryMulti').value = document.getElementById('familyHistory').value;
+                }
+
+                // Transfer to report form if it exists
+                if (document.getElementById('hiddenNameReport')) {
+                    document.getElementById('hiddenNameReport').value = document.getElementById('fullName').value;
+                    document.getElementById('hiddenAgeReport').value = document.getElementById('age').value;
+                    document.getElementById('hiddenDOBReport').value = document.getElementById('dateOfBirth').value;
+                    document.getElementById('hiddenGenderReport').value = document.getElementById('gender').value;
+                    document.getElementById('hiddenInclineReport').value = document.getElementById('inclineLevel').value;
+                    document.getElementById('hiddenHistoryReport').value = document.getElementById('familyHistory').value;
+                }
+
+                // Close modal and scroll to upload section
+                modal.style.display = "none";
+                document.getElementById('uploadFormSection').scrollIntoView({ behavior: 'smooth' });
+            });
+
+            demoBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                document.getElementById('exampleImagesSection').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
